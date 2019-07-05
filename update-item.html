@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Update</title>
+    <link rel="icon" type="image/png" href="emak.png"/>
+    <!-- Bootstrap -->
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="style.css">
+
+</head>
+
+<body>
+    <div class="container">
+        <br>
+        <nav class="navbar navbar-default">
+            <div class="container-fluid">
+                <div class="navbar-header">
+                   <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#nav" aria-expanded="false">
+                        <span class="sr-only">Toggle navigation</span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                    </button>
+                    <a class="navbar-brand" href="index.html">Pos PKK</a>
+                </div>
+                <div class="collapse navbar-collapse" id="nav">
+                    <ul class="nav navbar-nav">
+                        <!-- <li><a href="login.html">Member</a></li> -->
+                        <li><a href="events.html">Events</a></li>
+                        <li><a href="create.html">New Entry</a></li>
+                        <li><a href="event.html">New Event</a></li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+        
+        <form id="update_entry">
+            <h2>Nama Barang</h2>
+            <input type="text" name="nama_barang" class="form-control col-md-12" required>
+            
+            <h2>Kode Barang</h2>
+            <input type="text" name="idbarang" class="form-control" required>
+
+            <h2>Stok</h2>
+            <input type="number" name="stok" class="form-control" required>
+            
+            <h2>Keterangan</h2>
+            <br>
+            <textarea name="keterangan" id="content" class="form-control"></textarea>
+            
+            
+            <div class="text-right">
+                <button class="btn btn-large btn-primary">Update</button>
+            </div>
+        </form>
+
+    </div>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/js/bootstrap.min.js"></script>
+    
+    <script src="//cdn.ckeditor.com/4.5.10/standard/ckeditor.js"></script>
+    <!-- The core Firebase JS SDK is always required and must be listed first -->
+<!-- <script src="https://www.gstatic.com/firebasejs/6.2.1/firebase-app.js"></script> -->
+<script src="https://www.gstatic.com/firebasejs/live/3.0/firebase.js"></script>
+<!-- TODO: Add SDKs for Firebase products that you want to use
+     https://firebase.google.com/docs/web/setup#config-web-app -->
+
+<script>
+  // Your web app's Firebase configuration
+  var firebaseConfig = {
+    apiKey: "AIzaSyC4oQa25Zt3sE-Kj9mk8_QEC9KwR-9VFeI",
+    authDomain: "inventory-2c65e.firebaseapp.com",
+    databaseURL: "https://inventory-2c65e.firebaseio.com",
+    projectId: "inventory-2c65e",
+    storageBucket: "",
+    messagingSenderId: "763710628632",
+    appId: "1:763710628632:web:0d5bb9805ddb29bc"
+  };
+  // Initialize Firebase
+  firebase.initializeApp(firebaseConfig);
+
+        /////////////////////////////////////
+
+        
+        /**********************\
+         * check login status *
+        \**********************/
+        
+        firebase.auth().onAuthStateChanged(function (user) {
+            if (user) { 
+                
+                /*********************************\
+                 * Fetch the entry from Firebase *
+                \*********************************/
+                var item_id = $_GET('id');
+
+                if (item_id) {
+                    
+                    var Item = firebase.database().ref('Item').child(item_id);
+
+                    Item.once('value', function (r) { // once = just this once, no need to actively watch the changes
+                        var item = r.val();
+                        
+                        $('#update_entry [name="nama_barang"]').val(item.nama_barang);
+                        $('#update_entry [name="stok"]').val(item.stok);
+                        $('#update_entry [name="idbarang"]').val(item.idbarang);
+                        $('#update_entry [name="keterangan"]').val(item.keterangan);
+
+                        
+                        CKEDITOR.replace('content');
+                    });
+                    
+                    
+                    /**********************\
+                     * Save the form data *
+                    \**********************/
+                    $('#update_entry').submit(function(e){
+                        e.preventDefault();
+                        
+                        Item.transaction(function(item){
+                            
+                            item = item || {};
+                            item.nama_barang = $('#update_entry [name="nama_barang"]').val();
+                            item.idbarang = $('#update_entry [name="idbarang"]').val();
+                            item.stok = $('#update_entry [name="stok"]').val();
+                            item.keterangan = $('#update_entry [name="keterangan"]').val();
+                            // entry.content = CKEDITOR.instances['content'].getData();
+                            item.updatedAt = new Date().getTime();
+                            
+                            return item;
+                            
+                        }).then(function(){
+                            window.location.href = 'item.html?id='+item_id;
+                        }).catch(function(error){
+                            alert(error);
+                        });
+
+                        return false;
+                    });
+                    
+                }else{
+                    window.location.href = 'Barang.html';
+                }
+                
+                
+            }
+        });
+        
+        
+        /*************\
+         * Utilities *
+        \*************/
+
+        function $_GET(key) {
+            var queries = window.location.href.split('?').pop().split('&');
+            var params = {};
+            queries.map(function (query) {
+                var set = query.split('=');
+                params[set[0]] = set[1];
+            });
+
+            if (key) {
+                return params[key] || null;
+            } else {
+                return params;
+            }
+
+        }
+        
+    </script>
+
+
+</body>
+
+</html>
